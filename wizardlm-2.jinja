@@ -1,0 +1,32 @@
+{# Metadata #}
+{% set stop_strings = ["USER:", "ASSISTANT:", "SYSTEM:"] %}
+
+{{- bos_token -}}
+{% if messages[0]['role'] == 'system' %}
+    {% set loop_messages = messages[1:] %}
+    {% set system_message = messages[0]['content'] %}
+{% elif use_default_system_prompt == true %}
+    {% set loop_messages = messages %}
+    {% set system_message = "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions." %}
+{% else %}
+    {% set loop_messages = messages %}
+    {% set system_message = false %}
+{% endif %}
+{% if system_message != false %}
+    {{- system_message + ' ' -}}
+{% endif %}
+{% for message in loop_messages %}
+    {% set content = message['content'] %}
+    {% if message['role'] == 'user' %}
+        {{- 'USER: ' + content.strip() + ' ' -}}
+    {% elif message['role'] == 'assistant' %}
+        {{- 'ASSISTANT: '  + content.strip() + eos_token -}}
+    {% elif message['role'] == 'system' %}
+        {{- 'SYSTEM: ' + content.strip() + ' ' -}}
+    {% else %}
+        {{ raise_exception('Only user, assistant, and system roles are supported!') }}
+    {% endif %}
+{% endfor %}
+{% if add_generation_prompt %}
+    {{- 'ASSISTANT:' -}}
+{% endif %}
